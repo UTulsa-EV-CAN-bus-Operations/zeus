@@ -1,0 +1,16 @@
+No Data
+No Data
+No Data
+No Data
+No Data
+No Data
+No Data
+Timestamp: 1743369216.355479    ID:      004    S Rx E              DL:  4    01 02 01 00
+Timestamp: 1743369216.355493    ID:      004    S Rx E              DL:  4    01 11 09 00
+Timestamp: 1743369216.355533    ID:      004    S Rx E              DL:  4    01 02 0a 00
+Timestamp: 1743369216.355547    ID:      004    S Rx E              DL:  4    01 11 12 00
+Timestamp: 1743369216.355587    ID:      004    S Rx E              DL:  4    01 02 13 00
+Timestamp: 1743369216.355601    ID:      004    S Rx E              DL:  4    01 11 1b 00
+Timestamp: 1743369216.355641    ID:      004    S Rx E              DL:  4    01 02 1c 00
+Timestamp: 1743369216.355655    ID:      004    S Rx E              DL:  4    01 11 24 00
+Timestamp: 1743369216.355695    ID:      004    S Rx E              DL:  4    01 02 25 00
