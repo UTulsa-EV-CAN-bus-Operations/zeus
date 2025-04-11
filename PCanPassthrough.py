@@ -14,7 +14,7 @@ if __name__ == "__main__":
     SharedDataRtL = queue.Queue()
 
     LeftlistenerThread = Thread(target = LeftBUS.listen, daemon=True, kwargs={
-                                                        'fileName' : 'PCAN_History_LeftToRight.txt',
+                                                        'fileName' : 'PCAN_History_LeftToRightPACM.txt',
                                                         'DataStore' : SharedDataLtR
                                                         })
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
                                                             })
     
     RightlistenerThread = Thread(target = RightBUS.listen, daemon=True, kwargs={
-                                                        'fileName' : 'PCAN_History_RighttoLeft.txt',
+                                                        'fileName' : 'PCAN_History_RighttoLeftPACM.txt',
                                                         'DataStore' : SharedDataRtL
                                                         })
 
