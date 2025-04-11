@@ -2,7 +2,7 @@ import can
 from can import Message
 import time
 can.rc['interface'] = 'pcan'
-can.rc['channel'] = 'PCAN_USBBUS2'
+can.rc['channel'] = 'PCAN_USBBUS1'
 can.rc['bitrate'] = 500000
 from can.interface import Bus
 

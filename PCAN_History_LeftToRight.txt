@@ -1,0 +1,6 @@
+Timestamp: 1744329148.580645    ID: 18fef200    X Rx                DL:  8    00 ee 00 00 00 00 00 00
+Timestamp: 1744329150.280682    ID: 18fef200    X Rx                DL:  8    00 ee 00 00 00 00 00 00
+Timestamp: 1744329151.780685    ID: 18fef200    X Rx                DL:  8    00 ee 00 00 00 00 00 00
+Timestamp: 1744329160.703087    ID: 18fef200    X Rx                DL:  8    00 ee 00 00 00 00 00 00
+Timestamp: 1744329162.102895    ID: 18fef200    X Rx                DL:  8    00 ee 00 00 00 00 00 00
+Timestamp: 1744329163.502996    ID: 18fef200    X Rx                DL:  8    00 ee 00 00 00 00 00 00
