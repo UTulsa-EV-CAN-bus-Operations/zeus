@@ -3,8 +3,26 @@ Screen {
 }
 
 #logwindow {
-    height: 40%;
+    height: 60%;
     margin: 1;
     color: $text;
-    border: solid red;
+    border: solid yellow;
+
+}
+
+
+#replayconfig {
+    height: 20%;
+    margin: 1;
+    color: $text;
+    border: solid yellow;
+
+}
+
+#busconfig {
+    height: 30%;
+    margin: 1;
+    color: $text;
+    border: solid yellow;
+
 }
