@@ -6,7 +6,7 @@ Screen {
     height: 60%;
     margin: 1;
     color: $text;
-    border: solid yellow;
+    border: solid green;
 
 }
 
@@ -15,7 +15,7 @@ Screen {
     height: 20%;
     margin: 1;
     color: $text;
-    border: solid yellow;
+    border: solid green;
 
 }
 
@@ -23,6 +23,10 @@ Screen {
     height: 30%;
     margin: 1;
     color: $text;
-    border: solid yellow;
+    border: solid green;
 
+}
+
+#busconfig > Button {
+    border: solid green;
 }
