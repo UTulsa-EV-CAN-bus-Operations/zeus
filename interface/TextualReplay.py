@@ -44,10 +44,10 @@ class LogReplay(App):
 
         bus = can.interface.Bus(channel=self.config.channel, interface=self.config.interface, bitrate=self.config.bitrate, receive_own_messages=True)
 
-        filename = 'TextualReplayTESTlog1PACM-{date:%Y-%m-%d_%H-%M-%S}.trc'.format(date=datetime.datetime.now())
+        filename = 'trc-logs\\TextualReplayTESTlog1PACM-{date:%Y-%m-%d_%H-%M-%S}.trc'.format(date=datetime.datetime.now())
         logger = can.Logger(filename)
 
-        csvfile = 'TableReplayTESTlog1PACM-{date:%Y-%m-%d_%H-%M-%S}.csv'.format(date=datetime.datetime.now())
+        csvfile = 'csv-logs\\TableReplayTESTlog1PACM-{date:%Y-%m-%d_%H-%M-%S}.csv'.format(date=datetime.datetime.now())
         csvlogger = can.Logger(csvfile)
 
         reader = LogReader(self.config.filename)
@@ -57,7 +57,7 @@ class LogReplay(App):
         for msg in MessageSync(messages=reader):
             try:
                 if msg.is_error_frame == False:
-                    #log.write(str(msg))
+                    log.write(str(msg))
                     bus.send(msg)
 
             except KeyboardInterrupt:
