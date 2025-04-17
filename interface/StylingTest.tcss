@@ -1,0 +1,10 @@
+Screen {
+    align: center middle;
+}
+
+#logwindow {
+    height: 40%;
+    margin: 1;
+    color: $text;
+    border: solid red;
+}
