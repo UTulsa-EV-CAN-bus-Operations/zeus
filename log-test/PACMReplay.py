@@ -24,7 +24,7 @@ def replayTrace(bus, filename):
         except KeyboardInterrupt:
             pass
 
-traceFile = "reverse-isolated.trc"
+traceFile = ".\PassThroughTest\TruckOnlyMultiProcTest-2025-04-14_21-32-36.trc"
 replayTrace(bus1, traceFile)
 time.sleep(1.0)
 
