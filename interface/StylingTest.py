@@ -19,11 +19,9 @@ class ReplayConfig():
 class LogApp(App):
     CSS_PATH = "StylingTest.tcss"
     
-
     def __init__(self):
         super().__init__()
         self.config = ReplayConfig()
-
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -42,7 +40,8 @@ class LogApp(App):
                 Select(options=[("PCAN_USBBUS1", "PCAN_USBBUS1"), ("test", "test")], prompt="Select Channel", id="channel"),
                 Select(options=[("500000", "500000")], prompt="Select Bitrate", id="bitrate")
             ),
-            Button(label="Start Replay", id="start"),
+            Button(label="Start Replay", id="start"), 
+            name="busconfig",
             id="busconfig"
         )
 
@@ -84,9 +83,8 @@ class LogApp(App):
     
     @on(Input.Submitted)
     def accept_filename(self):
-        if (self.config.filename == ''):
-            input = self.query_one(Input)
-            self.config.filename = input.value
+        input = self.query_one(Input)
+        self.config.filename = input.value
     
             
 
