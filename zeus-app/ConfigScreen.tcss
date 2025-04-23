@@ -1,8 +1,29 @@
 Screen {
-    align: center top;
+    align: center middle;
+    layout: vertical;
 }
 
 Select {
-    width: 30;
+    width: 50;
     margin: 2;
+    border: round white 70%;
+}
+
+Button {
+    width: auto;
+    margin: 2;
+}
+
+#bus1config {
+    margin: 0 40;
+    border: round rgb(11, 127, 204);
+    border-title-align: center;
+    border-title-color: white; 
+}
+
+#bus2config {
+    margin: 0 40;
+    border: round rgb(11, 127, 204);
+    border-title-align: center;
+    border-title-color: white; 
 }
