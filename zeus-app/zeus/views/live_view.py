@@ -17,6 +17,10 @@ from zeus.messages.messages import CANFrame, CANMessageReceived
 class LiveView(Container):
   DEFAULT_CSS = """
   LiveView {
+    width: 1fr;
+    height: 1fr;
+    overflow: auto;
+    
     #data_table {
       height: 50%;
       margin: 2;
@@ -27,9 +31,6 @@ class LiveView(Container):
     }
     Select {
       border: round rgb(11, 127, 204);
-    }
-    Vertical.scrollable {
-      overflow:auto;
     }
     Checkbox {
       margin: 1;
@@ -73,7 +74,8 @@ class LiveView(Container):
         with Horizontal(id="log_setup"):
           yield self.log_checkbox
           yield self.logtype_select
-        yield DirectoryTree(path='.', id="directory_tree")
+        with Horizontal(id="directory_select"):  
+          yield DirectoryTree(path='.', id="directory_tree")
 
   def on_mount(self):
     self.table.add_columns("Timestamp","CAN ID", "Rx/Tx", "Length", "Data")
@@ -157,7 +159,8 @@ class LiveView(Container):
     selected_path = str(event.path)
     self.selected_file = selected_path
     self.table.clear()
-    await self.loadTrace(self.selected_file)
+    #await self.loadTrace(self.selected_file)
+    asyncio.create_task(self.loadTrace(self.selected_file))
 
   @on(CANMessageReceived)
   def on_can_message_received(self, event: CANMessageReceived) -> None:

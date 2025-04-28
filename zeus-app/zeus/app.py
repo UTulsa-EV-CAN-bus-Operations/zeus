@@ -35,3 +35,5 @@ class ZeusAnalysis(App):
     def on_change_tab(self, event: ChangeTab) -> None:
         event.stop()
         self.main_screen.change_tab(event.tab)
+
+app = ZeusAnalysis()
