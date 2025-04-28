@@ -32,3 +32,19 @@ class UpdateTabLabel(Message):
 
     tab_id: str
     tab_label: str
+
+@dataclass
+class CANFrame():
+    # Received CAN frame
+
+    timestamp: str
+    can_id: str
+    rxtx: str
+    length: int
+    data: str
+
+class CANMessageReceived(Message):
+    def __init__(self, sender, frame: CANFrame):
+        super().__init__()
+        self.sender = sender
+        self.frame = frame

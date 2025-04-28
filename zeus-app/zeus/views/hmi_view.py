@@ -1,28 +1,34 @@
-"""Widget for viewing HMI"""
-
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.events import Show
-from textual.validation import Integer
-from textual.widgets import Button, Checkbox, Input, Label, Select, Static
+from textual.containers import Container
+from textual.widgets import Label
+from zeus.messages.messages import CANMessageReceived  # Import the event
+from textual.app import App
 
-class HMIView(Horizontal):
-    DEFAULT_CSS = """
-    LogView {
-      #tool_bar {
-        height: 3;
-        background: $surface-darken-1;
-        #max_lines {
-          width: 12;
-        }
-        Label {
-          margin-top: 1;
-          background: transparent;
-        }
-      }
-      #logs {
-        border: solid $primary;
-      }
-    }
-    """
+class HMIView(Container):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.status_label = Label("Testing", id="status_label")
+        
+        self.update_status("System Initialized")
+
+    def update_status(self, message: str) -> None:
+        """Update the status label with new information."""
+        self.status_label.update(message)
+
+    def compose(self) -> ComposeResult:
+        """Render the HMI components."""
+        yield self.status_label
+
+    # Handling CAN messages and updating the UI based on CAN IDs
+    @on(CANMessageReceived)
+    def on_can_message_received(self, event: CANMessageReceived) -> None:
+        frame = event.frame
+        # Process CAN frame and update status based on conditions
+        if frame.can_id == 0x123:  # Example CAN ID
+            self.update_status(f"Special message received: {frame.data}")
+        elif frame.can_id == 0x456:  # Another example CAN ID
+            self.update_status("Important system alert received!")
+        else:
+            # Default message for other frames
+            self.update_status(f"Message from CAN ID {frame.can_id}: {frame.data}")
