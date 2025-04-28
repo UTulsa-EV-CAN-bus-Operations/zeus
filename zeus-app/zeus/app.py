@@ -5,6 +5,7 @@ from textual.color import Color
 from textual.widget import Widget
 from textual.widgets import Input, Select, TextArea
 
+from zeus.can_processor import CANProcessor
 from zeus.screens.main_screen import MainScreen
 from zeus.messages.messages import (
     AppRequest, 
@@ -21,10 +22,13 @@ class ZeusAnalysis(App):
     ]
 
     main_screen: MainScreen
+    can_processor: CANProcessor
 
     def __init__(self) -> None:
         super().__init__()
-    
+        self.can_processor = CANProcessor()
+        self.can_processor.set_app(self)
+
     async def on_mount(self) -> None:
         """Display screen."""
         self.main_screen = MainScreen()

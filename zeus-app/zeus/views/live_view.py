@@ -1,9 +1,6 @@
 """Widget for viewing data table of CAN packets"""
 import asyncio
-import can
 import time
-
-from can import Bus
 
 from textual import on
 from textual import log
@@ -13,6 +10,7 @@ from textual.widgets import Button, DirectoryTree, DataTable, Input, Label, Sele
 
 from zeus.config.app_config import BusConfig
 from zeus.messages.messages import CANFrame, CANMessageReceived
+from zeus.can_processor import CANProcessor
 
 class LiveView(Container):
   DEFAULT_CSS = """
@@ -40,16 +38,14 @@ class LiveView(Container):
     }
   }
   """
-
+  can_processor: CANProcessor
   table: DataTable
   bus_connect: Button
   bus_select: Select
   logtype_select: Select
   log_checkbox: Checkbox
   logging_enabled: bool = False
-  bus1config: BusConfig
   selected_file: str
-  bus1: Bus
 
   def __init__(self, **kwargs) -> None:
     super().__init__(**kwargs)
@@ -62,7 +58,7 @@ class LiveView(Container):
     self.logtype_select.border_title = "Log Filetype Selection: "
     
     self.log_checkbox = Checkbox(label="Enable Logging", value=self.logging_enabled, id="enable_logging")
-    self.bus1config = BusConfig()
+    self.can_processor = self.app.can_processor
 
   def compose(self) -> ComposeResult:
       
@@ -108,51 +104,7 @@ class LiveView(Container):
     event.stop()
     ctrl: Button = event.control
     if ctrl.id == "bus_connect":
-      self.initializeBus()
-
-  def initializeBus(self):
-    self.bus1 = can.Bus(channel=self.bus1config.channel, interface=self.bus1config.interface, bitrate=self.bus1config.bitrate)
-  
-  async def loadTrace(self, file_path):
-      self.table.clear()
-      try:
-          log_reader = can.LogReader(file_path)
-          messages = can.MessageSync(log_reader)
-
-          await self.replayTrace(messages)
-      except Exception as e:
-          log("Error with loading trace")
-
-  async def replayTrace(self, message_sync):
-
-      #logger = can.Logger(filename)
-
-      #notifier = can.Notifier(self.bus1)
-      
-      for msg in message_sync:
-        log(f"Got message: {msg}")
-        if msg.is_error_frame == False:
-          if (msg.is_rx):
-            rxtx="Rx"
-          else:
-            rxtx="Tx"
-
-          frame = CANFrame(
-            timestamp = f"{msg.timestamp:.3f}",
-            can_id = f"{msg.arbitration_id:03X}",
-            rxtx=rxtx,
-            length = msg.dlc,
-            data = " ".join(f"{b:02X}" for b in msg.data),
-          )
-          #self.bus1.send(msg)
-
-          #log(f"Adding row: {frame.timestamp}, {frame.can_id}, {rxtx}, {frame.length}, {frame.data}")
-          #self.table.add_row(frame.timestamp, frame.can_id, rxtx, str(frame.length), frame.data)
-          #self.table.scroll_end(animate=False)
-
-          self.post_message(CANMessageReceived(self,frame))
-
-        await asyncio.sleep(0.001)  # Give some time for UI updates
+      self.can_processor.initializeBus()
 
   @on(DirectoryTree.FileSelected)
   async def handle_file_selected(self, event:DirectoryTree.FileSelected):
@@ -160,7 +112,7 @@ class LiveView(Container):
     self.selected_file = selected_path
     self.table.clear()
     #await self.loadTrace(self.selected_file)
-    asyncio.create_task(self.loadTrace(self.selected_file))
+    asyncio.create_task(self.can_processor.loadTrace(self.selected_file))
 
   @on(CANMessageReceived)
   def on_can_message_received(self, event: CANMessageReceived) -> None:
