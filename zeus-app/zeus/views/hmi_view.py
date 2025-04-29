@@ -7,16 +7,16 @@ from textual.app import App
 
 from zeus.messages.messages import CANFrame, CANMessageReceived
 
-class ChargingPowerWidget(Static):
-    """Widget to display Charging Power."""
+class DoorState(Static):
+    """Widget to display if port door is open/closed"""
 
     def __init__(self):
         super().__init__()
-        self.charging_power = 0
-
-    def update_power(self, value):
-        self.charging_power = value
-        self.update(f"Charging Power: {self.charging_power} W")
+        self.door_state = "Unknown"
+    
+    def update_state(self, value):
+        self.door_state = value
+        self.update(f"Door State: {self.door_state}")
 
 
 class HMIView(Container):
@@ -29,24 +29,19 @@ class HMIView(Container):
         self.can_processor = self.app.can_processor
 
     def compose(self) -> ComposeResult:
-        self.charging_widget = ChargingPowerWidget()
-        yield self.charging_widget
+        self.door_widget = DoorState()
+        yield self.door_widget
         #yield Static(id="power", content=self.initial_message)
 
     def on_mount(self) -> None:
         self.can_processor.set_hmi_view(self)
-        self.charging_widget.update("Charging Power: ")
+        self.door_widget.update(f"Door State: {self.door_widget.door_state}")
 
     @on(CAN_HMIMessageReceived)
     def handle_message(self, event: CAN_HMIMessageReceived):
-        frame = event.frame
-        if (frame.can_id == "2EC"):
-            data = bytearray.fromhex(frame.data)
-            power = int.from_bytes(data[6:8], byteorder='big')
-            self.charging_widget.update_power(power)
-        """data = frame.data
-        static = self.query_one("#power", Static)
-        static.update(frame.can_id)"""
+        decoded = event.decoded
+        self.door_widget.update_state(decoded)
+        
 
         
 

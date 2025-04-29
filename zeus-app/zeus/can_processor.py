@@ -1,8 +1,12 @@
 import asyncio
 import can
+import cantools
 
 from can import Bus
 
+from cantools import database
+
+import cantools.database
 from textual import log
 from textual.app import App
 
@@ -19,10 +23,12 @@ class CANProcessor():
     hmi_view: HMIView
     bus1: Bus
     bus1config: BusConfig
+    db: database
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.bus1config = BusConfig()
+        self.db = None
 
     def set_app(self, app: App):
         self.app = app
@@ -38,6 +44,13 @@ class CANProcessor():
             self.bus1 = can.Bus(channel=self.bus1config.channel, interface=self.bus1config.interface, bitrate=self.bus1config.bitrate)
             log("Bus was initialized")
             log(self.bus1)
+
+    def load_dbc(self, dbc_path: str):
+        try:
+            self.db = cantools.database.load_file(dbc_path)
+            self.valid_ids = set(msg.frame_id for msg in self.db.messages)
+        except Exception as e:
+            log("Failed to load dbc file")
 
     async def loadTrace(self, file_path):
         try:
@@ -72,10 +85,16 @@ class CANProcessor():
 
             self.bus1.send(msg)
 
-            if (msg.arbitration_id == 0x02EC):
-                self.hmi_view.post_message(CAN_HMIMessageReceived(self,frame))
+            if self.db and msg.arbitration_id in self.valid_ids:
+                    try:
+                        decoded = self.db.decode_message(msg.arbitration_id, msg.data)
+                        log(f"Decoded message {hex(msg.arbitration_id)}: {decoded}")
+                        self.hmi_view.post_message(CAN_HMIMessageReceived(self, frame, decoded))
+                    except Exception as decode_err:
+                        log(f"Failed to decode message {hex(msg.arbitration_id)}: {decode_err}")
+
             # Posts message to live view
             self.live_view.post_message(CANMessageReceived(self,frame))
             
 
-            await asyncio.sleep(0.0001)  # Give some time for UI updates
+            await asyncio.sleep(0.000001)  # Give some time for UI updates

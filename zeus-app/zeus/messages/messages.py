@@ -50,7 +50,8 @@ class CANMessageReceived(Message):
         self.frame = frame
 
 class CAN_HMIMessageReceived(Message):
-    def __init__(self, sender, frame: CANFrame):
+    def __init__(self, sender, frame: CANFrame, decoded: dict = None):
         super().__init__()
         self.sender = sender
         self.frame = frame
+        self.decoded = decoded

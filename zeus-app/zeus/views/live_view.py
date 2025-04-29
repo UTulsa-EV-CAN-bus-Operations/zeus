@@ -110,9 +110,15 @@ class LiveView(Container):
   async def handle_file_selected(self, event:DirectoryTree.FileSelected):
     selected_path = str(event.path)
     self.selected_file = selected_path
-    self.table.clear()
-    #await self.loadTrace(self.selected_file)
-    asyncio.create_task(self.can_processor.loadTrace(self.selected_file))
+    
+    if selected_path.endswith('.trc'):
+      log("This is a .trc file!")
+      self.table.clear()
+      asyncio.create_task(self.can_processor.loadTrace(self.selected_file))
+    
+    elif selected_path.endswith('.dbc'):
+      self.can_processor.load_dbc(self.selected_file)
+
 
   @on(CANMessageReceived)
   def on_can_message_received(self, event: CANMessageReceived) -> None:
