@@ -2,22 +2,9 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.widgets import Label, Static
-from zeus.messages.messages import CANMessageReceived, CAN_HMIMessageReceived  # Import the event
-from textual.app import App
 
-from zeus.messages.messages import CANFrame, CANMessageReceived
-
-class DoorState(Static):
-    """Widget to display if port door is open/closed"""
-
-    def __init__(self):
-        super().__init__()
-        self.door_state = "Unknown"
-    
-    def update_state(self, value):
-        self.door_state = value
-        self.update(f"Door State: {self.door_state}")
-
+from zeus.messages.messages import CANFrame, CANMessageReceived, CAN_HMIMessageReceived
+from zeus.widgets.door_state import DoorState
 
 class HMIView(Container):
 
@@ -41,9 +28,3 @@ class HMIView(Container):
     def handle_message(self, event: CAN_HMIMessageReceived):
         decoded = event.decoded
         self.door_widget.update_state(decoded)
-        
-
-        
-
-
-

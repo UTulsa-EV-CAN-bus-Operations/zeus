@@ -14,6 +14,9 @@ data = door_message.encode({'Door': 1})
 message = can.Message(arbitration_id=door_message.frame_id, data=data)
 pprint(message)
 
+for sig in door_message.signals:
+    pprint(str(sig.choices))
+
 pprint(db.decode_message(message.arbitration_id,message.data))
 
 

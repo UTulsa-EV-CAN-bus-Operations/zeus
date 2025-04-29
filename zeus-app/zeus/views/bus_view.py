@@ -47,7 +47,6 @@ class BusView(Container):
     can_processor: object
     
 
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # CAN Bus Interface Select
@@ -98,5 +97,3 @@ class BusView(Container):
             elif event.value == 'virtual':
                 log('virtual selected')
                 self.busconfig = VirtualBusConfig()
-
-

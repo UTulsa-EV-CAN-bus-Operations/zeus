@@ -40,7 +40,6 @@ class CANProcessor():
     def set_hmi_view(self, hmi_view: HMIView):
         self.hmi_view = hmi_view
     
-
     def initializeBus(self, config: BusConfig):
             if self.bus1:
                 self.bus1.shutdown()
@@ -54,7 +53,7 @@ class CANProcessor():
             self.db = cantools.database.load_file(dbc_path)
             self.valid_ids = set(msg.frame_id for msg in self.db.messages)
         except Exception as e:
-            log("Failed to load dbc file")
+            log("Failed to load dbc file: ", e)
 
     async def loadTrace(self, file_path):
         try:
@@ -63,7 +62,7 @@ class CANProcessor():
 
             await self.replayTrace(messages)
         except Exception as e:
-            log("Error with loading trace")
+            log("Error with loading trace: ", e)
 
     async def replayTrace(self, message_sync):
 

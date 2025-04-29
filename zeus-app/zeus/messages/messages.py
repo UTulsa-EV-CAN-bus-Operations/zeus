@@ -55,3 +55,10 @@ class CAN_HMIMessageReceived(Message):
         self.sender = sender
         self.frame = frame
         self.decoded = decoded
+
+class SignalSelected(Message):
+    def __init__(self, sender, message_name: str, signal_name: str):
+        super().__init__()
+        self.sender = sender
+        self.message_name = message_name
+        self.signal_name = signal_name

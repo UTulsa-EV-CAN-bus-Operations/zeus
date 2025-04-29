@@ -7,6 +7,7 @@ from zeus.config.app_config import Settings, TabType
 from zeus.views.hmi_view import HMIView
 from zeus.views.live_view import LiveView
 from zeus.views.bus_view import BusView
+from zeus.views.dbc_view import DBCView
 
 
 class MainScreen(Screen):
@@ -18,12 +19,14 @@ class MainScreen(Screen):
     live_view: LiveView
     hmi_view: HMIView
     bus_view: BusView
+    dbc_view: DBCView
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.live_view = LiveView(id="live_view")
         self.hmi_view = HMIView(id="hmi_view")
         self.bus_view = BusView(id="bus_view")
+        self.dbc_view = DBCView(id="dbc_view")
 
     async def on_mount(self) -> None:
         self.set_timer(0.5, self.done_loading)
@@ -44,6 +47,8 @@ class MainScreen(Screen):
 
             with TabPane("Bus Setup/Info", id="Bus"):
                 yield self.bus_view
+            with TabPane("DBC Management", id="DBC"):
+                yield self.dbc_view
             with TabPane("Live", id="Live"):
                 yield self.live_view
             with TabPane("HMI", id="HMI"):
