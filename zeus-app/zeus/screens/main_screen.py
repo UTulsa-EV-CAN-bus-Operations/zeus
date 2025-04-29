@@ -8,6 +8,7 @@ from zeus.views.hmi_view import HMIView
 from zeus.views.live_view import LiveView
 from zeus.views.bus_view import BusView
 from zeus.views.dbc_view import DBCView
+from zeus.views.replay_view import ReplayView
 
 
 class MainScreen(Screen):
@@ -20,6 +21,7 @@ class MainScreen(Screen):
     hmi_view: HMIView
     bus_view: BusView
     dbc_view: DBCView
+    replay_view: ReplayView
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -27,6 +29,7 @@ class MainScreen(Screen):
         self.hmi_view = HMIView(id="hmi_view")
         self.bus_view = BusView(id="bus_view")
         self.dbc_view = DBCView(id="dbc_view")
+        self.replay_view = ReplayView(id="replay_view")
 
     async def on_mount(self) -> None:
         self.set_timer(0.5, self.done_loading)
@@ -49,6 +52,8 @@ class MainScreen(Screen):
                 yield self.bus_view
             with TabPane("DBC Management", id="DBC"):
                 yield self.dbc_view
+            with TabPane("Replay", id="Replay"):
+                yield self.replay_view
             with TabPane("Live", id="Live"):
                 yield self.live_view
             with TabPane("HMI", id="HMI"):
