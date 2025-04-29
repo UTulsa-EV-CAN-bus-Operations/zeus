@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Center, Vertical, Horizontal, Container
 from textual.widgets import Button, DirectoryTree, DataTable, Input, Label, Select, Checkbox
 
-from zeus.config.app_config import BusConfig
+from zeus.config.bus_config import BusConfig
 from zeus.messages.messages import CANFrame, CANMessageReceived
 
 class LiveView(Container):

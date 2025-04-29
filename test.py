@@ -18,6 +18,7 @@ pprint(db.decode_message(message.arbitration_id,message.data))
 
 
 bus1 = can.Bus(channel='test',interface='virtual')
+print(bus1.channel_info)
 valid_ids = set(msg.frame_id for msg in db.messages)
 file_path = 'zeus-app\zeus\logs\Open Close Door - ID 0x045E.trc'
 log_reader = can.LogReader(file_path)

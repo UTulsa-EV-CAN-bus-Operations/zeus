@@ -11,7 +11,7 @@ from textual import log
 from textual.app import App
 
 from zeus.messages.messages import CANFrame, CANMessageReceived, CAN_HMIMessageReceived
-from zeus.config.app_config import BusConfig
+from zeus.config.bus_config import BusConfig
 from zeus.views.live_view import LiveView
 from zeus.views.hmi_view import HMIView
 
@@ -27,8 +27,9 @@ class CANProcessor():
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.bus1config = BusConfig()
+        self.bus1config = None
         self.db = None
+        self.bus1 = None
 
     def set_app(self, app: App):
         self.app = app
@@ -40,8 +41,11 @@ class CANProcessor():
         self.hmi_view = hmi_view
     
 
-    def initializeBus(self):
-            self.bus1 = can.Bus(channel=self.bus1config.channel, interface=self.bus1config.interface, bitrate=self.bus1config.bitrate)
+    def initializeBus(self, config: BusConfig):
+            if self.bus1:
+                self.bus1.shutdown()
+            self.bus1 = config.create_bus()
+            self.bus1config = config
             log("Bus was initialized")
             log(self.bus1)
 
