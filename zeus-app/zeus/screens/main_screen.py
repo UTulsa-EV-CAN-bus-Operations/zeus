@@ -6,6 +6,7 @@ from textual.widgets import Footer, Header, Static, TabbedContent, TabPane
 from zeus.config.app_config import Settings, TabType
 from zeus.views.hmi_view import HMIView
 from zeus.views.live_view import LiveView
+from zeus.views.router_view import RouterView
 
 
 class MainScreen(Screen):
@@ -16,11 +17,13 @@ class MainScreen(Screen):
     tabbed_content: TabbedContent
     live_view: LiveView
     hmi_view: HMIView
+    router_view: RouterView
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.live_view = LiveView(id="live_view")
         self.hmi_view = HMIView(id="hmi_view")
+        self.router_view = RouterView(id="router_view")
 
     async def on_mount(self) -> None:
         self.set_timer(0.5, self.done_loading)
@@ -43,6 +46,8 @@ class MainScreen(Screen):
                 yield self.live_view
             with TabPane("HMI", id="HMI"):
                 yield self.hmi_view
+            with TabPane("Router", id="Router"):
+                yield self.router_view
 
     
     @on(TabbedContent.TabActivated)
