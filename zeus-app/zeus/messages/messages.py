@@ -48,3 +48,9 @@ class CANMessageReceived(Message):
         super().__init__()
         self.sender = sender
         self.frame = frame
+
+class CAN_HMIMessageReceived(Message):
+    def __init__(self, sender, frame: CANFrame):
+        super().__init__()
+        self.sender = sender
+        self.frame = frame

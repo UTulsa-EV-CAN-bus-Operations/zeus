@@ -6,13 +6,17 @@ from can import Bus
 from textual import log
 from textual.app import App
 
-from zeus.messages.messages import CANFrame, CANMessageReceived
+from zeus.messages.messages import CANFrame, CANMessageReceived, CAN_HMIMessageReceived
 from zeus.config.app_config import BusConfig
+from zeus.views.live_view import LiveView
+from zeus.views.hmi_view import HMIView
 
 
 class CANProcessor():
     
     app: App
+    live_view: LiveView
+    hmi_view: HMIView
     bus1: Bus
     bus1config: BusConfig
 
@@ -22,6 +26,12 @@ class CANProcessor():
 
     def set_app(self, app: App):
         self.app = app
+
+    def set_live_view(self, live_view: LiveView):
+        self.live_view = live_view
+
+    def set_hmi_view(self, hmi_view: HMIView):
+        self.hmi_view = hmi_view
     
 
     def initializeBus(self):
@@ -60,10 +70,12 @@ class CANProcessor():
                 data = " ".join(f"{b:02X}" for b in msg.data),
             )
 
-            # TODO: Need to route messages to the widget message queue, NOT the app message queue
-            self.app.post_message(CANMessageReceived(self,frame))
+            self.bus1.send(msg)
+
+            if (msg.arbitration_id == 0x02EC):
+                self.hmi_view.post_message(CAN_HMIMessageReceived(self,frame))
+            # Posts message to live view
+            self.live_view.post_message(CANMessageReceived(self,frame))
             
 
-            await asyncio.sleep(0.001)  # Give some time for UI updates
-
-
+            await asyncio.sleep(0.0001)  # Give some time for UI updates

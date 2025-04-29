@@ -10,7 +10,6 @@ from textual.widgets import Button, DirectoryTree, DataTable, Input, Label, Sele
 
 from zeus.config.app_config import BusConfig
 from zeus.messages.messages import CANFrame, CANMessageReceived
-from zeus.can_processor import CANProcessor
 
 class LiveView(Container):
   DEFAULT_CSS = """
@@ -38,7 +37,7 @@ class LiveView(Container):
     }
   }
   """
-  can_processor: CANProcessor
+  can_processor: object
   table: DataTable
   bus_connect: Button
   bus_select: Select
@@ -74,6 +73,7 @@ class LiveView(Container):
           yield DirectoryTree(path='.', id="directory_tree")
 
   def on_mount(self):
+    self.can_processor.set_live_view(self)
     self.table.add_columns("Timestamp","CAN ID", "Rx/Tx", "Length", "Data")
       
     # Add some dummy data:

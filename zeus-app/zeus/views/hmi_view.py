@@ -1,34 +1,54 @@
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container
-from textual.widgets import Label
-from zeus.messages.messages import CANMessageReceived  # Import the event
+from textual.widgets import Label, Static
+from zeus.messages.messages import CANMessageReceived, CAN_HMIMessageReceived  # Import the event
 from textual.app import App
 
+from zeus.messages.messages import CANFrame, CANMessageReceived
+
+class ChargingPowerWidget(Static):
+    """Widget to display Charging Power."""
+
+    def __init__(self):
+        super().__init__()
+        self.charging_power = 0
+
+    def update_power(self, value):
+        self.charging_power = value
+        self.update(f"Charging Power: {self.charging_power} W")
+
+
 class HMIView(Container):
+
+    can_processor: object
+    initial_message: str="Current Power: "
+    
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.status_label = Label("Testing", id="status_label")
-        
-        self.update_status("System Initialized")
-
-    def update_status(self, message: str) -> None:
-        """Update the status label with new information."""
-        self.status_label.update(message)
+        self.can_processor = self.app.can_processor
 
     def compose(self) -> ComposeResult:
-        """Render the HMI components."""
-        yield self.status_label
+        self.charging_widget = ChargingPowerWidget()
+        yield self.charging_widget
+        #yield Static(id="power", content=self.initial_message)
 
-    # Handling CAN messages and updating the UI based on CAN IDs
-    @on(CANMessageReceived)
-    def on_can_message_received(self, event: CANMessageReceived) -> None:
+    def on_mount(self) -> None:
+        self.can_processor.set_hmi_view(self)
+        self.charging_widget.update("Charging Power: ")
+
+    @on(CAN_HMIMessageReceived)
+    def handle_message(self, event: CAN_HMIMessageReceived):
         frame = event.frame
-        # Process CAN frame and update status based on conditions
-        if frame.can_id == 0x123:  # Example CAN ID
-            self.update_status(f"Special message received: {frame.data}")
-        elif frame.can_id == 0x456:  # Another example CAN ID
-            self.update_status("Important system alert received!")
-        else:
-            # Default message for other frames
-            self.update_status(f"Message from CAN ID {frame.can_id}: {frame.data}")
+        if (frame.can_id == "2EC"):
+            data = bytearray.fromhex(frame.data)
+            power = int.from_bytes(data[6:8], byteorder='big')
+            self.charging_widget.update_power(power)
+        """data = frame.data
+        static = self.query_one("#power", Static)
+        static.update(frame.can_id)"""
+
+        
+
+
+
