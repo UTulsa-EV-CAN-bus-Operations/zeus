@@ -5,7 +5,7 @@ from textual.widgets import Footer, Header, Static, TabbedContent, TabPane
 
 from zeus.config.app_config import Settings, TabType
 from zeus.views.hmi_view import HMIView
-from zeus.views.live_view import LiveView
+#from zeus.views.live_view import LiveView
 from zeus.views.bus_view import BusView
 from zeus.views.dbc_view import DBCView
 from zeus.views.replay_view import ReplayView
@@ -17,7 +17,7 @@ class MainScreen(Screen):
     CSS_PATH = "main_screen.tcss"
 
     tabbed_content: TabbedContent
-    live_view: LiveView
+    #live_view: LiveView
     hmi_view: HMIView
     bus_view: BusView
     dbc_view: DBCView
@@ -25,7 +25,7 @@ class MainScreen(Screen):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.live_view = LiveView(id="live_view")
+        #self.live_view = LiveView(id="live_view")
         self.hmi_view = HMIView(id="hmi_view")
         self.bus_view = BusView(id="bus_view")
         self.dbc_view = DBCView(id="dbc_view")
@@ -54,8 +54,8 @@ class MainScreen(Screen):
                 yield self.dbc_view
             with TabPane("Replay", id="Replay"):
                 yield self.replay_view
-            with TabPane("Live", id="Live"):
-                yield self.live_view
+            #with TabPane("Live", id="Live"):
+            #    yield self.live_view
             with TabPane("HMI", id="HMI"):
                 yield self.hmi_view
 

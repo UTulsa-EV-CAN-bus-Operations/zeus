@@ -1,11 +1,13 @@
+import asyncio
 from pathlib import Path
 from textual import on
 from textual import log
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
-from textual.widgets import Label, Static, DirectoryTree, Button
+from textual.widgets import DirectoryTree, Button, DataTable
 
 from zeus.widgets.titled_container import TitledContainer
+from zeus.messages.messages import CANMessageReceived
 
 
 class ReplayView(Container):
@@ -30,23 +32,27 @@ class ReplayView(Container):
         margin: 1 0 1 0;
         border: round white;
     }
+    #data_table {
+        height: 30;
+        border: round white;
+    }
     """
 
     can_processor: object
     dir_tree: DirectoryTree
     right_pane: TitledContainer
     selected_replay_path: Path=None
-    
+    table: DataTable
     
     def __init__(self, root_dir: str = ".", **kwargs):
         super().__init__(**kwargs)
+        self.table = DataTable(id="data_table", zebra_stripes=True)
         self.root_dir = root_dir
         self.selected_replay_path = None
         self.dir_tree = DirectoryTree(self.root_dir, id="dir_tree")
-
         self.can_processor = self.app.can_processor
-
         self.right_pane = TitledContainer(f"Filename: {self.selected_replay_path}")
+
 
     def compose(self) -> ComposeResult:
         with ScrollableContainer():
@@ -58,6 +64,12 @@ class ReplayView(Container):
                 with ScrollableContainer(id="right-panel"):
                     with self.right_pane:
                         yield Button(label="Start Replay", id="start_replay")
+                    self.table.border_title = "Replay Data: "
+                    yield self.table
+
+    def on_mount(self) -> None:
+        self.can_processor.set_replay_view(self)
+        self.table.add_columns("Timestamp","CAN ID", "Rx/Tx", "Length", "Data")
 
     @on(DirectoryTree.FileSelected)
     def on_directory_tree_click(self, event: DirectoryTree.FileSelected) -> None:
@@ -74,4 +86,10 @@ class ReplayView(Container):
             self.can_processor.load_replay(self.selected_replay_path)
         elif event.button.id == "start_replay":
             log("Replay starts now...")
-            self.can_processor.loadTrace(self.selected_replay_path)
+            asyncio.create_task(self.can_processor.replay())
+
+    @on(CANMessageReceived)
+    def on_can_message_received(self, event: CANMessageReceived) -> None:
+        frame = event.frame
+        self.table.add_row(frame.timestamp, frame.can_id, frame.rxtx, str(frame.length), frame.data)
+        self.table.scroll_end(animate=False)

@@ -12,14 +12,14 @@ from textual.app import App
 
 from zeus.messages.messages import CANFrame, CANMessageReceived, CAN_HMIMessageReceived
 from zeus.config.bus_config import BusConfig
-from zeus.views.live_view import LiveView
+from zeus.views.replay_view import ReplayView
 from zeus.views.hmi_view import HMIView
 
 
 class CANProcessor():
     
     app: App
-    live_view: LiveView
+    replay_view: ReplayView
     hmi_view: HMIView
     bus1: Bus
     bus1config: BusConfig
@@ -35,8 +35,8 @@ class CANProcessor():
     def set_app(self, app: App):
         self.app = app
 
-    def set_live_view(self, live_view: LiveView):
-        self.live_view = live_view
+    def set_replay_view(self, replay_view: ReplayView):
+        self.replay_view = replay_view
 
     def set_hmi_view(self, hmi_view: HMIView):
         self.hmi_view = hmi_view
@@ -98,7 +98,7 @@ class CANProcessor():
                         log(f"Failed to decode message {hex(msg.arbitration_id)}: {decode_err}")
 
             # Posts message to live view
-            self.live_view.post_message(CANMessageReceived(self,frame))
+            self.replay_view.post_message(CANMessageReceived(self,frame))
             
 
             await asyncio.sleep(0.000001)  # Give some time for UI updates
@@ -112,11 +112,6 @@ class CANProcessor():
             log("Error with loading trace: ", e)
 
     async def replay(self):
-
-      #logger = can.Logger(filename)
-
-      #notifier = can.Notifier(self.bus1)
-      
         for msg in self.messagesToPlay:
             log(f"Got message: {msg}")
             if msg.is_error_frame == False:
@@ -144,7 +139,7 @@ class CANProcessor():
                         log(f"Failed to decode message {hex(msg.arbitration_id)}: {decode_err}")
 
             # Posts message to live view
-            self.live_view.post_message(CANMessageReceived(self,frame))
+            self.replay_view.post_message(CANMessageReceived(self,frame))
             
 
-            await asyncio.sleep(0.000001)  # Give some time for UI updates
+            await asyncio.sleep(0.001)  # Give some time for UI updates
