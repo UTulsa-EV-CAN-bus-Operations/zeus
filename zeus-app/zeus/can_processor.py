@@ -111,7 +111,7 @@ class CANProcessor():
         except Exception as e:
             log("Error with loading trace: ", e)
 
-    async def replay(self):
+    def replay(self):
         for msg in self.messagesToPlay:
             log(f"Got message: {msg}")
             if msg.is_error_frame == False:
@@ -139,7 +139,7 @@ class CANProcessor():
                         log(f"Failed to decode message {hex(msg.arbitration_id)}: {decode_err}")
 
             # Posts message to live view
-            self.replay_view.post_message(CANMessageReceived(self,frame))
+            #self.replay_view.post_message(CANMessageReceived(self,frame))
             
 
-            await asyncio.sleep(0.001)  # Give some time for UI updates
+            #await asyncio.sleep(0.00001)  # Give some time for UI updates

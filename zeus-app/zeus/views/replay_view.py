@@ -32,21 +32,22 @@ class ReplayView(Container):
         margin: 1 0 1 0;
         border: round white;
     }
-    #data_table {
+    """
+
+    """    #data_table {
         height: 30;
         border: round white;
-    }
-    """
+    }"""
 
     can_processor: object
     dir_tree: DirectoryTree
     right_pane: TitledContainer
     selected_replay_path: Path=None
-    table: DataTable
+    #table: DataTable
     
     def __init__(self, root_dir: str = ".", **kwargs):
         super().__init__(**kwargs)
-        self.table = DataTable(id="data_table", zebra_stripes=True)
+        #self.table = DataTable(id="data_table", zebra_stripes=True)
         self.root_dir = root_dir
         self.selected_replay_path = None
         self.dir_tree = DirectoryTree(self.root_dir, id="dir_tree")
@@ -64,19 +65,19 @@ class ReplayView(Container):
                 with ScrollableContainer(id="right-panel"):
                     with self.right_pane:
                         yield Button(label="Start Replay", id="start_replay")
-                    self.table.border_title = "Replay Data: "
-                    yield self.table
+                        yield Button(label="Start Delayed Replay", id="delayed_replay")
+                    #self.table.border_title = "Replay Data: "
+                    #yield self.table
 
     def on_mount(self) -> None:
         self.can_processor.set_replay_view(self)
-        self.table.add_columns("Timestamp","CAN ID", "Rx/Tx", "Length", "Data")
+        #self.table.add_columns("Timestamp","CAN ID", "Rx/Tx", "Length", "Data")
 
     @on(DirectoryTree.FileSelected)
     def on_directory_tree_click(self, event: DirectoryTree.FileSelected) -> None:
         if str(event.path).endswith(".trc"):
             self.selected_replay_path = event.path
             log(f"Selected TRC: {self.selected_replay_path}")
-            self.right_pane.border_title = f"Filename: {self.selected_replay_path.name}"
         else:
             self.selected_replay_path = None
 
@@ -84,12 +85,15 @@ class ReplayView(Container):
         if event.button.id == "load_replay":
             log("Replay file loading...")
             self.can_processor.load_replay(self.selected_replay_path)
+            self.right_pane.border_title = f"Filename: {self.selected_replay_path.name}"
         elif event.button.id == "start_replay":
             log("Replay starts now...")
-            asyncio.create_task(self.can_processor.replay())
-
-    @on(CANMessageReceived)
+            #asyncio.create_task(self.can_processor.replay())
+            self.can_processor.replay()
+        elif event.button.id == "delayed_replay":
+            asyncio.create_task(self.can_processor.loadTrace(self.selected_replay_path))
+    """@on(CANMessageReceived)
     def on_can_message_received(self, event: CANMessageReceived) -> None:
         frame = event.frame
         self.table.add_row(frame.timestamp, frame.can_id, frame.rxtx, str(frame.length), frame.data)
-        self.table.scroll_end(animate=False)
+        self.table.scroll_end(animate=False)"""
