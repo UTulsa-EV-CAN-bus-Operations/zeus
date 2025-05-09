@@ -1,15 +1,13 @@
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container
-from textual.widgets import Label, Static
 
-from zeus.messages.messages import CANFrame, CANMessageReceived, CAN_HMIMessageReceived
+from zeus.messages.messages import CAN_HMIMessageReceived
 from zeus.widgets.door_state import DoorState
 
 class HMIView(Container):
 
     can_processor: object
-    initial_message: str="Current Power: "
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -18,7 +16,6 @@ class HMIView(Container):
     def compose(self) -> ComposeResult:
         self.door_widget = DoorState()
         yield self.door_widget
-        #yield Static(id="power", content=self.initial_message)
 
     def on_mount(self) -> None:
         self.can_processor.set_hmi_view(self)
