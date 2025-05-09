@@ -10,7 +10,7 @@ from textual.widgets import Label, Static, Checkbox, Button, Select
 from zeus.widgets.bus_stats import BusStats
 from zeus.widgets.titled_container import TitledContainer
 
-from zeus.config.bus_config import BusConfig, VirtualBusConfig, PCANBusConfig
+from zeus.config.bus_config import BusConfig
 
 
 class BusView(Container):
@@ -93,7 +93,7 @@ class BusView(Container):
         if ctrl.id == "bus_select":
             if event.value == 'pcan':
                 log('pcan selected')
-                self.busconfig = PCANBusConfig()
+                self.busconfig = BusConfig(interface="pcan", channel="PCAN_USBBUS1", bitrate=500000)
             elif event.value == 'virtual':
                 log('virtual selected')
-                self.busconfig = VirtualBusConfig()
+                self.busconfig = BusConfig(interface="virtual", channel="test", bitrate=500000)
