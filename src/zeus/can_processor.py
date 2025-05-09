@@ -25,12 +25,17 @@ class CANProcessor():
     bus1config: BusConfig
     db: database
     messagesToPlay: can.MessageSync
+    shouldLog: bool
+    logger: can.Logger
+    notifier: can.Notifier
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.bus1config = None
         self.db = None
         self.bus1 = None
+        self.shouldLog = False
+        self.messagesToPlay = None
 
     def set_app(self, app: App):
         self.app = app
@@ -56,6 +61,19 @@ class CANProcessor():
         except Exception as e:
             log("Failed to load dbc file: ", e)
 
+    def registerLogger(self, filename):
+        self.shouldLog = True
+        file_path = "zeus/logs/" + filename + ".trc" 
+        log("Registering logger and notifier...")
+        self.logger = can.Logger(file_path)
+        self.notifier = can.Notifier(self.bus1, [self.logger])
+        log("Logger registration complete!")
+    
+    def closeLogger(self):
+        if (self.logger != None and self.notifier!=None):
+            self.logger.stop()
+            self.notifier.stop()
+
     async def loadTrace(self, file_path):
         try:
             log_reader = can.LogReader(file_path)
@@ -66,10 +84,6 @@ class CANProcessor():
             log("Error with loading trace: ", e)
 
     async def replayTrace(self, message_sync):
-
-      #logger = can.Logger(filename)
-
-      #notifier = can.Notifier(self.bus1)
       
         for msg in message_sync:
             log(f"Got message: {msg}")

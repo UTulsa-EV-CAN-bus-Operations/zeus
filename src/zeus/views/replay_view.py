@@ -88,10 +88,12 @@ class ReplayView(Container):
             self.right_pane.border_title = f"Filename: {self.selected_replay_path.name}"
         elif event.button.id == "start_replay":
             log("Replay starts now...")
-            #asyncio.create_task(self.can_processor.replay())
-            self.can_processor.replay()
+            if(self.can_processor.messagesToPlay != None):
+                self.can_processor.replay()
         elif event.button.id == "delayed_replay":
             asyncio.create_task(self.can_processor.loadTrace(self.selected_replay_path))
+    
+    
     """@on(CANMessageReceived)
     def on_can_message_received(self, event: CANMessageReceived) -> None:
         frame = event.frame

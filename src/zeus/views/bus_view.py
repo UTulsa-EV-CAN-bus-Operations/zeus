@@ -78,9 +78,11 @@ class BusView(Container):
     def on_button_press(self, event:Button.Pressed) -> None:
         event.stop()
         ctrl: Button = event.control
+    
         if ctrl.id == "bus_connect":
-            self.can_processor.initializeBus(self.busconfig)
-            self.bus_stats.set_bus(self.can_processor.bus1,self.can_processor.bus1config)
+            if (self.bus_config!=None):
+                self.can_processor.initializeBus(self.bus_config)
+                self.bus_stats.set_bus(self.can_processor.bus1,self.can_processor.bus1config)
         elif ctrl.id == "bus_disconnect":
             self.can_processor.bus1.shutdown()
             self.bus_stats.set_bus(None, None)
@@ -93,7 +95,7 @@ class BusView(Container):
         if ctrl.id == "bus_select":
             if event.value == 'pcan':
                 log('pcan selected')
-                self.busconfig = BusConfig(interface="pcan", channel="PCAN_USBBUS1", bitrate=500000)
+                self.bus_config = BusConfig(interface="pcan", channel="PCAN_USBBUS1", bitrate=500000)
             elif event.value == 'virtual':
                 log('virtual selected')
-                self.busconfig = BusConfig(interface="virtual", channel="test", bitrate=500000)
+                self.bus_config = BusConfig(interface="virtual", channel="test", bitrate=500000)
