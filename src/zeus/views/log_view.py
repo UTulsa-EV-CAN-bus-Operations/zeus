@@ -77,6 +77,7 @@ class LogView(Container):
             self.can_processor.registerLogger(ctrl.value)
             log("Log file name saved!")
             ctrl.value = ""
+            self.dir_tree.reload()
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -84,3 +85,4 @@ class LogView(Container):
         if (ctrl.id == "close_log"):
             self.can_processor.closeLogger()
             log("Closed log file")
+            self.dir_tree.reload()

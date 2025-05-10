@@ -32,6 +32,9 @@ class ReplayView(Container):
         margin: 1 0 1 0;
         border: round white;
     }
+    Button {
+        margin: 1
+    }
     """
 
     """    #data_table {
@@ -62,6 +65,7 @@ class ReplayView(Container):
                     self.dir_tree.border_title = "Select a replay file: "
                     yield self.dir_tree
                     yield Button(label="Load Replay File", id="load_replay")
+                    yield Button(label="Refresh Directory", id="refresh")
                 with ScrollableContainer(id="right-panel"):
                     with self.right_pane:
                         yield Button(label="Start Replay", id="start_replay")
@@ -92,7 +96,12 @@ class ReplayView(Container):
                 self.can_processor.replay()
         elif event.button.id == "delayed_replay":
             asyncio.create_task(self.can_processor.loadTrace(self.selected_replay_path))
+        elif event.button.id == "refresh":
+            self.refresh_tree()
     
+    # Refresh the directory tree
+    def refresh_tree(self):
+        self.dir_tree.reload()
     
     """@on(CANMessageReceived)
     def on_can_message_received(self, event: CANMessageReceived) -> None:
