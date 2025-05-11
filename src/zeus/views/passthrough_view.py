@@ -70,7 +70,7 @@ class PassthroughView(Container):
         self.bus1_connect = Button(id="bus1_connect", label="Connect")
         self.bus1_disconnect = Button(id="bus1_disconnect", label="Disconnect")
         self.bus1_config = None
-        self.bus1_stats = BusStats(None, None)
+        self.bus1_stats = BusStats("bus1", None, None)
         
         # CAN Bus 2 Interface Select
         self.bus2_select = Select(id="bus2_select", prompt="Select CAN Bus 2 Interface", options=[("PCAN","pcan")])
@@ -78,7 +78,7 @@ class PassthroughView(Container):
         self.bus2_connect = Button(id="bus2_connect", label="Connect")
         self.bus2_disconnect = Button(id="bus2_disconnect", label="Disconnect")
         self.bus2_config = None
-        self.bus2_stats = BusStats(None, None)
+        self.bus2_stats = BusStats("bus2", None, None)
 
         # Setup Buttons for controlling passthrough
         self.passthrough_Start_Button = Button(id = "Start_Passthrough", label= "Start Passthrough")

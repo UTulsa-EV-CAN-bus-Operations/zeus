@@ -2,6 +2,7 @@ import can
 
 from textual.containers import Vertical
 from textual.widgets import  Static, Label
+from zeus.widgets.titled_container import TitledContainer
 
 
 class BusStats(Static):
@@ -13,23 +14,24 @@ class BusStats(Static):
     }    
 """
 
-    def __init__(self, bus: can.Bus, busconfig, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, id:str, bus: can.Bus, busconfig, **kwargs):
+        super().__init__(id=id, **kwargs)
         self.border_title = "CAN Bus Status"
         self.border = True
         self.bus = bus
         self.busconfig = busconfig
     
     def compose(self):
-        with Vertical():
-            self.state_label = Label()
-            self.interface_label = Label()
-            self.channel_label = Label()
-            self.bitrate_label = Label()
-            yield self.state_label
-            yield self.interface_label
-            yield self.channel_label
-            yield self.bitrate_label
+        with TitledContainer(title="CAN Connection"):
+            with Vertical():
+                self.state_label = Label()
+                self.interface_label = Label()
+                self.channel_label = Label()
+                self.bitrate_label = Label()
+                yield self.state_label
+                yield self.interface_label
+                yield self.channel_label
+                yield self.bitrate_label
 
     def on_mount(self):
         self.update_labels()
