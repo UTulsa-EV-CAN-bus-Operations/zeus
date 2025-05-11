@@ -38,6 +38,24 @@ class BusView(Container):
         width: 60;
         height: auto;
     }
+    #connect_bus {
+        width: 1fr;
+        height: auto;
+        margin: 1;
+    }
+    #disconnect_bus {
+        width: 1fr;
+        height: 15;
+        margin: 1;
+    }
+    #connections {
+        width: 1fr;
+        height: auto;
+        margin: 1;
+    }
+    #recentlyAdded {
+        width: auto;
+    }
     
 """
     
@@ -87,19 +105,20 @@ class BusView(Container):
     def compose(self) -> ComposeResult:
         with Horizontal():
             with Vertical():
-                with TitledContainer("Connect Bus:"):
+                with TitledContainer("Connect Bus:", id="connect_bus"):
                             with Vertical(id="bus_setup"):
                                 yield self.bus_setup_select
                                 with Horizontal(id="bus_setup"):
                                     yield self.bus_connect
-                            with Vertical(id="bus_teardown"):
+                with TitledContainer("Disconnect Bus:", id="disconnect_bus"):
+                    with Vertical(id="bus_teardown"):
                                 yield self.bus_teardown_select
                                 with Horizontal(id="bus_teardown"):
                                     yield self.bus_disconnect
 
-                with TitledContainer("Bus Stats: "):
-                    with Vertical(id="bus_stats"):
-                        yield self.bus_stats
+            with TitledContainer("Bus Stats:", id="connections"):
+                with Vertical(id="bus_stats"):
+                    yield self.bus_stats
 
             yield self.StackBusStats
 
