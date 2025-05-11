@@ -10,6 +10,7 @@ from zeus.views.bus_view import BusView
 from zeus.views.dbc_view import DBCView
 from zeus.views.log_view import LogView
 from zeus.views.replay_view import ReplayView
+from zeus.views.passthrough_view import PassthroughView
 
 
 class MainScreen(Screen):
@@ -24,6 +25,7 @@ class MainScreen(Screen):
     dbc_view: DBCView
     replay_view: ReplayView
     log_view: LogView
+    passthrough_view : PassthroughView
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -33,6 +35,7 @@ class MainScreen(Screen):
         self.dbc_view = DBCView(id="dbc_view")
         self.replay_view = ReplayView(id="replay_view")
         self.log_view = LogView(id="log_view")
+        self.passthrough_view = PassthroughView(id="passthrough_view")
 
     async def on_mount(self) -> None:
         self.set_timer(0.5, self.done_loading)
@@ -59,6 +62,8 @@ class MainScreen(Screen):
                 yield self.dbc_view
             with TabPane("Replay", id="Replay"):
                 yield self.replay_view
+            with TabPane("Passthrough", id="Passthrough"):
+                yield self.passthrough_view
             #with TabPane("Live", id="Live"):
             #    yield self.live_view
             with TabPane("HMI", id="HMI"):

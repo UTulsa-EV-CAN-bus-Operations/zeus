@@ -14,6 +14,10 @@ from textual.worker import Worker
 import time
 import datetime
 
+"""
+I have likely absolutely broken this test script :) -- clw
+"""
+
 class ReplayConfig():
     interface = "virtual"
     channel = "test"

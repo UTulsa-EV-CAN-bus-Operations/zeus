@@ -104,7 +104,7 @@ class LiveView(Container):
     event.stop()
     ctrl: Button = event.control
     if ctrl.id == "bus_connect":
-      self.can_processor.initializeBus()
+      self.can_processor.initializeBus() # Depreciated? -- clw 5/11
 
   @on(DirectoryTree.FileSelected)
   async def handle_file_selected(self, event:DirectoryTree.FileSelected):

@@ -15,14 +15,20 @@ from zeus.config.bus_config import BusConfig
 from zeus.views.replay_view import ReplayView
 from zeus.views.hmi_view import HMIView
 
+import time
+import datetime
+from multiprocessing import Process, Lock, Queue
+
 
 class CANProcessor():
     
     app: App
     replay_view: ReplayView
     hmi_view: HMIView
-    bus1: Bus
-    bus1config: BusConfig
+
+    busDict : dict[str, Bus]
+    configDict : dict[str, BusConfig]
+
     db: database
     messagesToPlay: can.MessageSync
     shouldLog: bool
@@ -31,11 +37,12 @@ class CANProcessor():
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.bus1config = None
         self.db = None
-        self.bus1 = None
         self.shouldLog = False
         self.messagesToPlay = None
+
+        self.busDict = {}
+        self.configDict = {}
 
     def set_app(self, app: App):
         self.app = app
@@ -46,13 +53,16 @@ class CANProcessor():
     def set_hmi_view(self, hmi_view: HMIView):
         self.hmi_view = hmi_view
     
-    def initializeBus(self, config: BusConfig):
-            if self.bus1:
-                self.bus1.shutdown()
-            self.bus1 = config.create_bus()
-            self.bus1config = config
-            log("Bus was initialized")
-            log(self.bus1)
+    def initializeBus(self, config: BusConfig, busName : str):
+        try:
+            if self.busDict[busName]:
+                self.busDict[busName].shutdown()
+
+        except KeyError as k:
+            self.busDict[busName] = config.create_bus()
+            self.configDict[busName] = config
+            log(f"Bus {busName} was initialized")
+            log(self.busDict[busName])
 
     def load_dbc(self, dbc_path: str):
         try:
@@ -61,12 +71,13 @@ class CANProcessor():
         except Exception as e:
             log("Failed to load dbc file: ", e)
 
-    def registerLogger(self, filename):
+    def registerLogger(self, filename : str, busName : str): # TODO: Trackdown references and update // tf does this do?
+        # If I understand this correctly we need to associate a Logger with a can Notifier object which is associated with a can python object?
         self.shouldLog = True
         file_path = "zeus/logs/" + filename + ".trc" 
         log("Registering logger and notifier...")
         self.logger = can.Logger(file_path)
-        self.notifier = can.Notifier(self.bus1, [self.logger])
+        self.notifier = can.Notifier(self.busDict[busName], [self.logger])
         log("Logger registration complete!")
     
     def closeLogger(self):
@@ -83,7 +94,7 @@ class CANProcessor():
         except Exception as e:
             log("Error with loading trace: ", e)
 
-    async def replayTrace(self, message_sync):
+    async def replayTrace(self, message_sync, busName : str): #TODO: Trackdown references and update
       
         for msg in message_sync:
             log(f"Got message: {msg}")
@@ -101,7 +112,7 @@ class CANProcessor():
                 data = " ".join(f"{b:02X}" for b in msg.data),
             )
 
-            self.bus1.send(msg)
+            self.busDict[busName].send(msg)
 
             if self.db and msg.arbitration_id in self.valid_ids:
                     try:
@@ -125,7 +136,7 @@ class CANProcessor():
         except Exception as e:
             log("Error with loading trace: ", e)
 
-    def replay(self):
+    def replay(self, busName : str): #TODO: Trackdown references and update
         for msg in self.messagesToPlay:
             log(f"Got message: {msg}")
             if msg.is_error_frame == False:
@@ -142,7 +153,7 @@ class CANProcessor():
                 data = " ".join(f"{b:02X}" for b in msg.data),
             )
 
-            self.bus1.send(msg)
+            self.busDict[busName].send(msg)
 
             if self.db and msg.arbitration_id in self.valid_ids:
                     try:
@@ -157,3 +168,62 @@ class CANProcessor():
             
 
             #await asyncio.sleep(0.00001)  # Give some time for UI updates
+
+    def sendMessages(self, channel='PCAN_USBBUS1', interface='pcan', bitrate=500000, receive_own_messages = False, fileName = "ForgotToNameFile.trc", inQueue : Queue = [], outQueue : Queue = []): # TODO: Refactor
+        bus = can.interface.Bus(channel=channel, interface=interface, bitrate=bitrate, receive_own_messages = receive_own_messages)
+        print_listener = can.Printer()
+
+        # Instatiate logger to log received messages to timestamped file
+        logger = can.Logger(fileName)
+
+        BufferedReader = can.BufferedReader()
+
+        notifier1 = can.Notifier(bus, [print_listener,logger, BufferedReader])
+
+        while True:
+            msg = BufferedReader.get_message()
+            outQueue.put(msg)
+            while not inQueue.empty():
+                #self.busLock.acquire()
+                msgToSend = inQueue.get()
+                #print(f"{Fore.GREEN} Sending: {msgToSend}{Fore.RESET}")
+                if msg != None:
+                    try:
+                        bus.send(msg=msgToSend)
+                    except Exception as e:
+                        print(f"Exception Occured {e}")
+    
+    def passthrough(self, bus_1, bus_2):
+        SharedDataLtR = Queue()
+        SharedDataRtL = Queue()
+
+        sendProcess1 = Process(target=self.sendMessages, kwargs = {
+            'channel' : 'PCAN_USBBUS1',
+            'interface' :'pcan',
+            'bitrate' : 500000,
+            'receive_own_messages' : False, 
+            'fileName' : '/logs/PassThroughLog-{date:%Y-%m-%d_%H-%M-%S}.trc'.format(date=datetime.datetime.now()),
+            'inQueue' :  SharedDataLtR,
+            'outQueue' : SharedDataRtL
+        }, daemon=True)
+
+
+        sendProcess2 = Process(target=self.sendMessages, kwargs = {
+            'channel' : 'PCAN_USBBUS2',
+            'interface' :'pcan',
+            'bitrate' : 500000,
+            'receive_own_messages' : False, 
+            'fileName' : '/logs/PassThroughLog-{date:%Y-%m-%d_%H-%M-%S}.trc'.format(date=datetime.datetime.now()),
+            'inQueue' :  SharedDataRtL,
+            'outQueue' : SharedDataLtR
+        }, daemon=True)
+
+        try:
+            sendProcess1.start()
+            sendProcess2.start()
+
+            while True:
+                pass
+
+        except KeyboardInterrupt:
+            pass
