@@ -4,10 +4,13 @@ from textual import on
 from textual import log
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
-from textual.widgets import DirectoryTree, Button, DataTable, Input, Label
+from textual.widgets import DirectoryTree, Button, DataTable, Input, Label, Select
 
 from zeus.widgets.titled_container import TitledContainer
 from zeus.messages.messages import CANMessageReceived
+
+from zeus.can_processor import CANProcessor
+from can import Bus
 
 
 class LogView(Container):
@@ -42,10 +45,11 @@ class LogView(Container):
         border: round white;
     }"""
 
-    can_processor: object
+    can_processor: CANProcessor
     dir_tree: DirectoryTree
     right_pane: TitledContainer
     selected_replay_path: Path=None
+    can_select: Select
     #table: DataTable
     
     def __init__(self, root_dir: str = "./zeus/logs/", **kwargs):
@@ -57,6 +61,11 @@ class LogView(Container):
         self.can_processor = self.app.can_processor
         self.right_pane = TitledContainer("Type the name of your new log file and press enter to save")
 
+        self.CanSelectList = []
+        self.can_select = Select(id="logger_connection", prompt="Select Active CAN Bus Interface", options=self.CanSelectList)
+
+        self.can_to_log = None
+
     def compose(self) -> ComposeResult:
         with ScrollableContainer():
             with Horizontal():
@@ -66,18 +75,27 @@ class LogView(Container):
                     #yield Button(label="Load Replay File", id="load_replay")
                 with ScrollableContainer(id="right-panel"):
                     with self.right_pane:
+                        yield self.can_select
                         yield Input(placeholder="Enter Here...", id="file_enter")
                         yield Button(label="Close Log File", id="close_log")
-                        
+    
+    def on_show(self):
+        self.CanSelectList = []
+        for key in self.can_processor.configDict.keys():
+            self.CanSelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+        self.can_select.set_options(self.CanSelectList)
     
     @on(Input.Submitted)
     def on_input_submitted(self, event: Input.Submitted) -> None:
         ctrl = event.control
         if (ctrl.id == "file_enter"):
-            self.can_processor.registerLogger(ctrl.value)
-            log("Log file name saved!")
-            ctrl.value = ""
-            self.dir_tree.reload()
+            if self.can_to_log == None:
+                log("No Can Selected, Logging Failed")
+            else:
+                self.can_processor.registerLogger(ctrl.value, self.can_to_log)
+                log("Log file name saved!")
+                ctrl.value = ""
+                self.dir_tree.reload()
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -86,3 +104,15 @@ class LogView(Container):
             self.can_processor.closeLogger()
             log("Closed log file")
             self.dir_tree.reload()
+    
+    @on(Select.Changed)
+    def on_select_changed(self, event:Select.Changed) -> None:
+        event.stop()
+        ctrl: Select = event.control
+        if ctrl.id == "logger_connection":
+            if event.value == 'virtual':
+                log('virtual selected')
+                self.can_to_log = "test"
+            else:
+                log(f'{event.value} selected')
+                self.can_to_log = event.value

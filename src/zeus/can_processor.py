@@ -12,22 +12,23 @@ from textual.app import App
 
 from zeus.messages.messages import CANFrame, CANMessageReceived, CAN_HMIMessageReceived
 from zeus.config.bus_config import BusConfig
-from zeus.views.replay_view import ReplayView
+#from zeus.views.replay_view import ReplayView
 from zeus.views.hmi_view import HMIView
 
 import time
 import datetime
-from multiprocessing import Process, Lock, Queue
-
+from multiprocess import Process, Queue
 
 class CANProcessor():
     
     app: App
-    replay_view: ReplayView
+    #replay_view: ReplayView
     hmi_view: HMIView
 
     busDict : dict[str, Bus]
     configDict : dict[str, BusConfig]
+    loggerDict : dict[str, can.Logger]
+    notifierDict : dict[str, can.Notifier]
 
     db: database
     messagesToPlay: can.MessageSync
@@ -43,12 +44,14 @@ class CANProcessor():
 
         self.busDict = {}
         self.configDict = {}
+        self.loggerDict = {}
+        self.notifierDict = {}
 
     def set_app(self, app: App):
         self.app = app
 
-    def set_replay_view(self, replay_view: ReplayView):
-        self.replay_view = replay_view
+    #def set_replay_view(self, replay_view: ReplayView):
+    #    self.replay_view = replay_view
 
     def set_hmi_view(self, hmi_view: HMIView):
         self.hmi_view = hmi_view
@@ -76,8 +79,8 @@ class CANProcessor():
         self.shouldLog = True
         file_path = "zeus/logs/" + filename + ".trc" 
         log("Registering logger and notifier...")
-        self.logger = can.Logger(file_path)
-        self.notifier = can.Notifier(self.busDict[busName], [self.logger])
+        self.loggerDict[busName] = can.Logger(file_path)
+        self.notifierDict[busName] = can.Notifier(self.busDict[busName], [self.loggerDict[busName]])
         log("Logger registration complete!")
     
     def closeLogger(self):
@@ -85,16 +88,16 @@ class CANProcessor():
             self.logger.stop()
             self.notifier.stop()
 
-    async def loadTrace(self, file_path):
+    async def loadTrace(self, file_path, busname: str):
         try:
             log_reader = can.LogReader(file_path)
             messages = can.MessageSync(log_reader)
 
-            await self.replayTrace(messages)
+            await self.replayTrace(messages, busname)
         except Exception as e:
             log("Error with loading trace: ", e)
 
-    async def replayTrace(self, message_sync, busName : str): #TODO: Trackdown references and update
+    async def replayTrace(self, message_sync, busName : str):
       
         for msg in message_sync:
             log(f"Got message: {msg}")
@@ -123,7 +126,7 @@ class CANProcessor():
                         log(f"Failed to decode message {hex(msg.arbitration_id)}: {decode_err}")
 
             # Posts message to live view
-            self.replay_view.post_message(CANMessageReceived(self,frame))
+            #self.replay_view.post_message(CANMessageReceived(self,frame))
             
 
             await asyncio.sleep(0.000001)  # Give some time for UI updates
@@ -136,7 +139,7 @@ class CANProcessor():
         except Exception as e:
             log("Error with loading trace: ", e)
 
-    def replay(self, busName : str): #TODO: Trackdown references and update
+    def replay(self, busName : str):
         for msg in self.messagesToPlay:
             log(f"Got message: {msg}")
             if msg.is_error_frame == False:
@@ -168,17 +171,53 @@ class CANProcessor():
             
 
             #await asyncio.sleep(0.00001)  # Give some time for UI updates
+    
+    def startPassthrough(self, bus_1, bus_2, bus1_file, bus2_file):
+        SharedDataLtR = Queue()
+        SharedDataRtL = Queue()
 
-    def sendMessages(self, channel='PCAN_USBBUS1', interface='pcan', bitrate=500000, receive_own_messages = False, fileName = "ForgotToNameFile.trc", inQueue : Queue = [], outQueue : Queue = []): # TODO: Refactor
-        bus = can.interface.Bus(channel=channel, interface=interface, bitrate=bitrate, receive_own_messages = receive_own_messages)
-        print_listener = can.Printer()
+        self.busDict[bus_1].shutdown()
+        del self.busDict[bus_1]
+        del self.configDict[bus_1]
+        
+        self.busDict[bus_2].shutdown()
+        del self.busDict[bus_2]
+        del self.configDict[bus_2]
+        
+        self.sendProcess1 = Process(target=sendPassthroughMessages, kwargs = {
+            'bus_name' : bus_1,
+            'logger_file' : bus1_file,
+            'inQueue' :  SharedDataLtR,
+            'outQueue' : SharedDataRtL
+        }, daemon=True)
 
+
+        self.sendProcess2 = Process(target=sendPassthroughMessages, kwargs = {
+            'bus_name' : bus_2,
+            'logger_file' : bus2_file,
+            'inQueue' :  SharedDataLtR,
+            'outQueue' : SharedDataRtL
+        }, daemon=True)
+
+        self.sendProcess1.start()
+        self.sendProcess2.start()
+
+    def stopPassThrough(self):
+        self.sendProcess1.terminate()
+        self.sendProcess2.terminate()
+
+
+def sendPassthroughMessages(bus_name : str, logger_file : str, inQueue : Queue = [], outQueue : Queue = []): # TODO: Refactor
+       
         # Instatiate logger to log received messages to timestamped file
-        logger = can.Logger(fileName)
-
+        bus = can.interface.Bus(channel=bus_name, interface='pcan', bitrate=500000, receive_own_messages = True)
         BufferedReader = can.BufferedReader()
 
-        notifier1 = can.Notifier(bus, [print_listener,logger, BufferedReader])
+        if logger_file != None:
+            logger = can.Logger(logger_file)
+            notifier = can.Notifier(bus, [logger, BufferedReader])
+        else:
+            notifier = can.Notifier(bus, [BufferedReader])
 
         while True:
             msg = BufferedReader.get_message()
@@ -192,38 +231,4 @@ class CANProcessor():
                         bus.send(msg=msgToSend)
                     except Exception as e:
                         print(f"Exception Occured {e}")
-    
-    def passthrough(self, bus_1, bus_2):
-        SharedDataLtR = Queue()
-        SharedDataRtL = Queue()
-
-        sendProcess1 = Process(target=self.sendMessages, kwargs = {
-            'channel' : 'PCAN_USBBUS1',
-            'interface' :'pcan',
-            'bitrate' : 500000,
-            'receive_own_messages' : False, 
-            'fileName' : '/logs/PassThroughLog-{date:%Y-%m-%d_%H-%M-%S}.trc'.format(date=datetime.datetime.now()),
-            'inQueue' :  SharedDataLtR,
-            'outQueue' : SharedDataRtL
-        }, daemon=True)
-
-
-        sendProcess2 = Process(target=self.sendMessages, kwargs = {
-            'channel' : 'PCAN_USBBUS2',
-            'interface' :'pcan',
-            'bitrate' : 500000,
-            'receive_own_messages' : False, 
-            'fileName' : '/logs/PassThroughLog-{date:%Y-%m-%d_%H-%M-%S}.trc'.format(date=datetime.datetime.now()),
-            'inQueue' :  SharedDataRtL,
-            'outQueue' : SharedDataLtR
-        }, daemon=True)
-
-        try:
-            sendProcess1.start()
-            sendProcess2.start()
-
-            while True:
-                pass
-
-        except KeyboardInterrupt:
-            pass
+        

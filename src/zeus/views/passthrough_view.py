@@ -5,13 +5,14 @@ from textual import on
 from textual import log
 from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll, Horizontal, Vertical
-from textual.widgets import Label, Static, Checkbox, Button, Select
+from textual.widgets import Label, Static, Checkbox, Button, Select, Input
 
 from zeus.widgets.bus_stats import BusStats
 from zeus.widgets.titled_container import TitledContainer
 
 from zeus.config.bus_config import BusConfig
 from zeus.can_processor import CANProcessor
+from can import Bus
 
 
 class PassthroughView(Container):
@@ -39,46 +40,43 @@ class PassthroughView(Container):
     
 """
 
-    bus1: object
-    bus1_config: BusConfig 
+    can_processor: CANProcessor
+
+    bus1: object 
     bus1_select: Select
-    bus1_stats: BusStats
-    bus1_connect: Button
-    bus1_disconnect: Button
+    Can1SelectList: list[str]
 
     bus2: object
-    bus2_config: BusConfig 
     bus2_select: Select
-    bus2_stats: BusStats
-    bus2_connect: Button
-    bus2_disconnect: Button
+    Can2SelectList: list[str]
 
     passthrough_Start_Button : Button
     passthrough_Stop_Button : Button
 
-    can_processor: CANProcessor
-    
-
-    def __init__(self, **kwargs):
+    def __init__(self, root_dir: str = "./zeus/logs/", **kwargs):
         super().__init__(**kwargs)
         # Get connection to can_processor
         self.can_processor = self.app.can_processor
 
+        self.root_dir = root_dir
+        self.selected_logging_path = None
+
+        self.Can1SelectList = [(str, str)]
+        self.Can2SelectList = [(str, str)]
+
+        self.bus1file = None
+        self.bus2file = None
+
         # CAN Bus 1 Interface Select
-        self.bus1_select = Select(id="bus1_select", prompt="Select CAN Bus 1 Interface", options=[("PCAN","pcan")])
+        self.bus1_select = Select(id="bus1_select", prompt="Select CAN Bus 1 Interface", options=self.Can1SelectList)
         self.bus1_select.border_title = "CAN Bus 1 Interface Selection: "
-        self.bus1_connect = Button(id="bus1_connect", label="Connect")
-        self.bus1_disconnect = Button(id="bus1_disconnect", label="Disconnect")
-        self.bus1_config = None
-        self.bus1_stats = BusStats("bus1", None, None)
         
         # CAN Bus 2 Interface Select
-        self.bus2_select = Select(id="bus2_select", prompt="Select CAN Bus 2 Interface", options=[("PCAN","pcan")])
+        self.bus2_select = Select(id="bus2_select", prompt="Select CAN Bus 2 Interface", options=self.Can2SelectList)
         self.bus2_select.border_title = "CAN Bus 2 Interface Selection: "
-        self.bus2_connect = Button(id="bus2_connect", label="Connect")
-        self.bus2_disconnect = Button(id="bus2_disconnect", label="Disconnect")
-        self.bus2_config = None
-        self.bus2_stats = BusStats("bus2", None, None)
+
+        self.bus1 = None
+        self.bus2 = None
 
         # Setup Buttons for controlling passthrough
         self.passthrough_Start_Button = Button(id = "Start_Passthrough", label= "Start Passthrough")
@@ -87,72 +85,76 @@ class PassthroughView(Container):
     def compose(self) -> ComposeResult:
         with Horizontal():
             with Vertical():
-                with TitledContainer("Connect Bus 1:"):
+                with TitledContainer("Select Bus 1:"):
                     with Vertical(id="bus1_setup"):
                         yield self.bus1_select
-                        with Horizontal(id="bus1_setup"):
-                            yield self.bus1_connect
-                            yield self.bus1_disconnect
-                
-                with TitledContainer("Bus 1 Stats: "):
-                    with Vertical(id="bus1_stats"):
-                        yield self.bus1_stats
 
             with Vertical():
+                yield Input(placeholder="Enter Here...", id="file_enter")
                 yield self.passthrough_Start_Button
                 yield self.passthrough_Stop_Button
 
             
             with Vertical():
-                with TitledContainer("Connect Bus 2:"):
+                with TitledContainer("Select Bus 2:"):
                     with Vertical(id="bus2_setup"):
                         yield self.bus2_select
-                        with Horizontal(id="bus2_setup"):
-                            yield self.bus2_connect
-                            yield self.bus2_disconnect
-                
-                with TitledContainer("Bus 2 Stats: "):
-                    with Vertical(id="bus2_stats"):
-                        yield self.bus2_stats
 
+    def on_show(self):
+        self.Can1SelectList = []
+        self.Can2SelectList = []
+        for key in self.can_processor.configDict.keys():
+            if key != "test":
+                self.Can1SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+                self.Can2SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+        self.bus1_select.set_options(self.Can1SelectList)
+        self.bus2_select.set_options(self.Can2SelectList)
+
+    @on(Input.Submitted)
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        ctrl = event.control
+        if (ctrl.id == "file_enter"):
+            self.bus1file = "zeus/logs/" + ctrl.value + "_Left" + ".trc"
+            self.bus2file = "zeus/logs/" + ctrl.value + "_Right" + ".trc"
+            log("Log file name saved!")
+            ctrl.value = ""
 
     @on(Button.Pressed)
     def on_button_press(self, event:Button.Pressed) -> None:
         event.stop()
         ctrl: Button = event.control
-    
-        if ctrl.id == "bus1_connect":
-            if (self.bus1_config!=None):
-                self.can_processor.initializeBus(self.bus_config, self.bus1_config.channel)
-                self.bus1_stats.set_bus(self.can_processor.busDict[self.bus1_config.channel], self.can_processor.configDict[self.bus1_config.channel])
-        elif ctrl.id == "bus1_disconnect":
-            self.can_processor.busDict[self.bus1_config.channel].shutdown()
-            self.bus1_stats.set_bus(None, None)
-
-        if ctrl.id == "bus2_connect":
-            if (self.bus2_config!=None):
-                self.can_processor.initializeBus(self.bus_config, self.bus2_config.channel)
-                self.bus2_stats.set_bus(self.can_processor.busDict[self.bus2_config.channel], self.can_processor.configDict[self.bus2_config.channel])
-        elif ctrl.id == "bus2_disconnect":
-            self.can_processor.busDict[self.bus2_config.channel].shutdown()
-            self.bus2_stats.set_bus(None, None)
 
         if ctrl.id == "Start_Passthrough":
-            pass # TODO: Implement passthrough scripts
+            self.can_processor.startPassthrough(self.bus1, self.bus2, self.bus1file, self.bus2file)
         elif ctrl.id == "Stop_Passthrough":
+            self.can_processor.stopPassThrough()
             pass # TODO: Figure out how to stop passthrough Scripts
-                
+
     @on(Select.Changed)
-    def on_select_changed(self, event:Select.Changed) -> None:
+    def on_select_changed(self, event:Select.Changed) -> None: #TODO: Fix the logic to only allow one of each at a time -- clw
         event.stop()
         ctrl: Select = event.control
 
         if ctrl.id == "bus1_select":
-            if event.value == 'pcan':
-                log('pcan selected')
-                self.bus1_config = BusConfig(interface="pcan", channel="PCAN_USBBUS1", bitrate=500000)
+            log(f'{event.value} selected')
+            self.bus1 = event.value
+
+
+            self.Can2SelectList = []
+            for key in self.can_processor.configDict.keys():
+                if key != "test" and key != self.bus1:
+                    self.Can2SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+                if self.bus2 == None:
+                    self.bus2_select.set_options(self.Can2SelectList)
 
         if ctrl.id == "bus2_select":
-            if event.value == 'pcan':
-                log('pcan selected')
-                self.bus2_config = BusConfig(interface="pcan", channel="PCAN_USBBUS2", bitrate=500000)
+            log(f'{event.value} selected')
+            self.bus2 = event.value
+
+
+            self.Can1SelectList = []
+            for key in self.can_processor.configDict.keys():
+                if key != "test" and key != self.bus2:
+                    self.Can1SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+            if self.bus1 == None:    
+                self.bus1_select.set_options(self.Can1SelectList)
