@@ -53,6 +53,8 @@ class PassthroughView(Container):
     passthrough_Start_Button : Button
     passthrough_Stop_Button : Button
 
+    transmitting: bool
+
     def __init__(self, root_dir: str = "./zeus/logs/", **kwargs):
         super().__init__(**kwargs)
         # Get connection to can_processor
@@ -82,6 +84,8 @@ class PassthroughView(Container):
         self.passthrough_Start_Button = Button(id = "Start_Passthrough", label= "Start Passthrough")
         self.passthrough_Stop_Button = Button(id = "Stop_Passthrough", label= "Stop Passthrough")
 
+        self.transmitting = False
+
     def compose(self) -> ComposeResult:
         with Horizontal():
             with Vertical():
@@ -101,14 +105,15 @@ class PassthroughView(Container):
                         yield self.bus2_select
 
     def on_show(self):
-        self.Can1SelectList = []
-        self.Can2SelectList = []
-        for key in self.can_processor.configDict.keys():
-            if key != "test":
-                self.Can1SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
-                self.Can2SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
-        self.bus1_select.set_options(self.Can1SelectList)
-        self.bus2_select.set_options(self.Can2SelectList)
+        if not self.transmitting:
+            self.Can1SelectList = []
+            self.Can2SelectList = []
+            for key in self.can_processor.configDict.keys():
+                if key != "test":
+                    self.Can1SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+                    self.Can2SelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+            self.bus1_select.set_options(self.Can1SelectList)
+            self.bus2_select.set_options(self.Can2SelectList)
 
     @on(Input.Submitted)
     def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -125,10 +130,15 @@ class PassthroughView(Container):
         ctrl: Button = event.control
 
         if ctrl.id == "Start_Passthrough":
+            self.transmitting = True
+            self.query_one("#bus1_select", Select).disabled = True
+            self.query_one("#bus2_select", Select).disabled = True
             self.can_processor.startPassthrough(self.bus1, self.bus2, self.bus1file, self.bus2file)
         elif ctrl.id == "Stop_Passthrough":
-            self.can_processor.stopPassThrough()
-            pass # TODO: Figure out how to stop passthrough Scripts
+            self.can_processor.stopPassThrough(self.bus1, self.bus2)
+            self.transmitting = False
+            self.query_one("#bus1_select", Select).disabled = False
+            self.query_one("#bus2_select", Select).disabled = False
 
     @on(Select.Changed)
     def on_select_changed(self, event:Select.Changed) -> None: #TODO: Fix the logic to only allow one of each at a time -- clw

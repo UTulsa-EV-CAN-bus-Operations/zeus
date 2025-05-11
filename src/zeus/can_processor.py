@@ -17,7 +17,7 @@ from zeus.views.hmi_view import HMIView
 
 import time
 import datetime
-from multiprocess import Process, Queue
+from multiprocessing import Process, Queue
 
 class CANProcessor():
     
@@ -35,6 +35,7 @@ class CANProcessor():
     shouldLog: bool
     logger: can.Logger
     notifier: can.Notifier
+    BusyCANConnections: list[str]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -46,6 +47,8 @@ class CANProcessor():
         self.configDict = {}
         self.loggerDict = {}
         self.notifierDict = {}
+
+        self.BusyCANConnections = []
 
     def set_app(self, app: App):
         self.app = app
@@ -179,10 +182,12 @@ class CANProcessor():
         self.busDict[bus_1].shutdown()
         del self.busDict[bus_1]
         del self.configDict[bus_1]
+        self.BusyCANConnections.append(bus_1)
         
         self.busDict[bus_2].shutdown()
         del self.busDict[bus_2]
         del self.configDict[bus_2]
+        self.BusyCANConnections.append(bus_2)
         
         self.sendProcess1 = Process(target=sendPassthroughMessages, kwargs = {
             'bus_name' : bus_1,
@@ -195,16 +200,18 @@ class CANProcessor():
         self.sendProcess2 = Process(target=sendPassthroughMessages, kwargs = {
             'bus_name' : bus_2,
             'logger_file' : bus2_file,
-            'inQueue' :  SharedDataLtR,
-            'outQueue' : SharedDataRtL
+            'inQueue' :  SharedDataRtL,
+            'outQueue' : SharedDataLtR
         }, daemon=True)
 
         self.sendProcess1.start()
         self.sendProcess2.start()
 
-    def stopPassThrough(self):
+    def stopPassThrough(self, bus_1, bus_2):
         self.sendProcess1.terminate()
         self.sendProcess2.terminate()
+        self.BusyCANConnections.remove(bus_1)
+        self.BusyCANConnections.remove(bus_2)
 
 
 def sendPassthroughMessages(bus_name : str, logger_file : str, inQueue : Queue = [], outQueue : Queue = []): # TODO: Refactor
@@ -221,12 +228,13 @@ def sendPassthroughMessages(bus_name : str, logger_file : str, inQueue : Queue =
 
         while True:
             msg = BufferedReader.get_message()
-            outQueue.put(msg)
+            if msg != None:
+                outQueue.put(msg)
             while not inQueue.empty():
                 #self.busLock.acquire()
                 msgToSend = inQueue.get()
                 #print(f"{Fore.GREEN} Sending: {msgToSend}{Fore.RESET}")
-                if msg != None:
+                if msgToSend != None:
                     try:
                         bus.send(msg=msgToSend)
                     except Exception as e:

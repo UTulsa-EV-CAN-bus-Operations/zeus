@@ -52,6 +52,7 @@ class BusView(Container):
     USBList: list[(str, str)]
     SetupSelectList: list[(str, str)]
     toTeardown: str
+    StackBusStats: VerticalScroll
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -79,6 +80,10 @@ class BusView(Container):
 
         self.bus_stats = BusStats("recentlyAdded",None,None)
 
+        self.StackBusStats = VerticalScroll(id="CAN_connections")
+
+        self.USBIgnoreList = []
+
     def compose(self) -> ComposeResult:
         with Horizontal():
             with Vertical():
@@ -96,7 +101,24 @@ class BusView(Container):
                     with Vertical(id="bus_stats"):
                         yield self.bus_stats
 
-            yield VerticalScroll(id="CAN_connections")
+            yield self.StackBusStats
+
+    async def on_show(self):
+        await self.StackBusStats.remove_children(self.StackBusStats.children)
+        
+        self.TeardownSelectList = []
+        
+        for key in self.can_processor.configDict.keys():
+            new_CAN_Connection = BusStats(key, bus = self.can_processor.busDict[key], busconfig = self.can_processor.configDict[key])
+            self.query_one("#CAN_connections").mount(new_CAN_Connection)
+            new_CAN_Connection.scroll_visible()
+            self.TeardownSelectList.append((self.can_processor.configDict[key].channel, self.can_processor.configDict[key].channel))
+
+        self.updateSelectList()
+        self.bus_setup_select.set_options(self.SetupSelectList)
+
+        self.bus_teardown_select.set_options(self.TeardownSelectList)
+
 
     @on(Button.Pressed)
     def on_button_press(self, event:Button.Pressed) -> None:
@@ -166,6 +188,7 @@ class BusView(Container):
                 temp_string = "PCAN_USBBUS" + device_id[len(device_id) - 1]
             if temp_string != None:
                 if not self.can_processor.busDict.keys().__contains__(temp_string):
-                    self.SetupSelectList.append((temp_string, temp_string))
+                    if not self.can_processor.BusyCANConnections.__contains__(temp_string):
+                        self.SetupSelectList.append((temp_string, temp_string))
         if not self.can_processor.busDict.keys().__contains__("test"):
             self.SetupSelectList.append(("Virtual","virtual"))
