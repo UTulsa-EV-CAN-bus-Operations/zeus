@@ -217,7 +217,7 @@ class CANProcessor():
 def sendPassthroughMessages(bus_name : str, logger_file : str, inQueue : Queue = [], outQueue : Queue = []): # TODO: Refactor
        
         # Instatiate logger to log received messages to timestamped file
-        bus = can.interface.Bus(channel=bus_name, interface='pcan', bitrate=500000, receive_own_messages = True)
+        bus = can.interface.Bus(channel=bus_name, interface='pcan', bitrate=500000, receive_own_messages = False)
         BufferedReader = can.BufferedReader()
 
         if logger_file != None:

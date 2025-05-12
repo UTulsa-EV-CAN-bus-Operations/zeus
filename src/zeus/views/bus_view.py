@@ -34,6 +34,11 @@ class BusView(Container):
         height: auto;
         margin: 1
     }
+    #bus_teardown {
+        width: 60;
+        height: auto;
+        margin: 1
+    }
     #bus_stats {
         width: 60;
         height: auto;
@@ -78,7 +83,7 @@ class BusView(Container):
 
         self.toTeardown = None
 
-        self.bus_stats = BusStats("recentlyAdded",None,None)
+        #self.bus_stats = BusStats("recentlyAdded",None,None)
 
         self.StackBusStats = VerticalScroll(id="CAN_connections")
 
@@ -88,18 +93,19 @@ class BusView(Container):
         with Horizontal():
             with Vertical():
                 with TitledContainer("Connect Bus:"):
-                            with Vertical(id="bus_setup"):
-                                yield self.bus_setup_select
-                                with Horizontal(id="bus_setup"):
-                                    yield self.bus_connect
-                            with Vertical(id="bus_teardown"):
-                                yield self.bus_teardown_select
-                                with Horizontal(id="bus_teardown"):
-                                    yield self.bus_disconnect
+                    with Vertical(id="bus_setup"):
+                        yield self.bus_setup_select
+                        with Horizontal(id="bus_setup"):
+                            yield self.bus_connect
+                with TitledContainer("Disconnect Bus:", id = "disconnectContainer"):
+                    with Vertical(id="bus_teardown"):
+                        yield self.bus_teardown_select
+                        with Horizontal(id="bus_teardown"):
+                            yield self.bus_disconnect
 
-                with TitledContainer("Bus Stats: "):
+                """with TitledContainer("Bus Stats: "):
                     with Vertical(id="bus_stats"):
-                        yield self.bus_stats
+                        yield self.bus_stats"""
 
             yield self.StackBusStats
 
@@ -128,7 +134,7 @@ class BusView(Container):
         if ctrl.id == "bus_connect":
             if (self.bus_config!=None):
                 self.can_processor.initializeBus(self.bus_config, self.bus_config.channel) # Meow
-                self.bus_stats.set_bus(self.can_processor.busDict[self.bus_config.channel],self.can_processor.configDict[self.bus_config.channel])
+                #self.bus_stats.set_bus(self.can_processor.busDict[self.bus_config.channel],self.can_processor.configDict[self.bus_config.channel])
                 
                 new_CAN_Connection = BusStats(self.bus_config.channel, bus = self.can_processor.busDict[self.bus_config.channel], busconfig = self.can_processor.configDict[self.bus_config.channel])
                 self.query_one("#CAN_connections").mount(new_CAN_Connection)
