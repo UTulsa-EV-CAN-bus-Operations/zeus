@@ -1,7 +1,20 @@
 # zeus
-**DISCLAIMER**: This is a WIP TUI, it is not 100% stable, there are most certainly bugs. This tool also purely supports the PCAN CAN Bus Interface, we didn't have time to design and test supporting other interfaces.
+#### **DISCLAIMER**: This is a WIP TUI, it is not 100% stable, there are most certainly bugs. This tool also purely supports the PCAN CAN Bus Interface, we didn't have time to design and test supporting other interfaces. This project was designed within a rather short window of time. The current version is not polished to perfection, there's still a lot left to be desired. 
 
-This was designed with a relatively short window of time as a spring semester senior project. The current version is not polished to perfection, there's still a lot left to be desired. 
+Zeus is intended to be used as an easily accessible library of CAN bus analysis tools that allow users to analyze, capture, and replay traffic via connected CAN bus adapters.
+
+## Prerequisites
+There are currently two options for running this.
+
+1. You can run the app directly by navigating to `dist\zeus.exe`. This executable should work for supported machines.
+
+2. If you by chance are on a machine that can't run `.exe` files, you'll likely have to defer to this method (and may want to have this method set up anyways, in case you want to fork off the repo and make changes to the project yourself).
+
+    - Set up a python virtual environment (if you're unfamiliar, [this link](https://www.w3schools.com/python/python_virtualenv.asp) is helpful)
+    - Check out the `requirements.txt` file which contains the dependencies (there aren't many). You can then run `pip install -r requirements.txt` to auto-install these dependencies.
+    - Navigate to the `.\zeus\src\` directory (not the package folder in the src) and run `python -m zeus` from the CLI. The TUI should be up and running.
+
+## Features & Current State
 
 This version has the following features:
 
@@ -20,14 +33,3 @@ This version has the following features:
 
 * HMI (Human Machine Interface) - this was a proof-of-concept that showed we could take a loaded `.dbc` file and replay a capture and see real-time signal behavior. This isn't dynamic, it isn't really useful in its current state.
 
-
-## How do I use the tool?
-There are currently two options for running this.
-
-1. You can run the app directly by navigating to `dist\zeus.exe`. This executable should work for supported machines.
-
-2. If you by chance are on a machine that can't run `.exe` files, you'll likely have to defer to this method (and may want to have this method set up anyways, in case you want to fork off the repo and make changes to the project yourself).
-
-    - Set up a python virtual environment (if you're unfamiliar, [this link](https://www.w3schools.com/python/python_virtualenv.asp) is helpful)
-    - Check out the `requirements.txt` file which contains the dependencies (there aren't many). You can then run `pip install -r requirements.txt` to auto-install these dependencies.
-    - Navigate to the `.\zeus\src\` directory (not the package folder in the src) and run `python -m zeus` from the CLI. The TUI should be up and running.
