@@ -1,0 +1,32 @@
+Screen {
+    align: center middle;
+}
+
+#logwindow {
+    height: 60%;
+    margin: 1;
+    color: $text;
+    border: solid green;
+
+}
+
+
+#replayconfig {
+    height: 20%;
+    margin: 1;
+    color: $text;
+    border: solid green;
+
+}
+
+#busconfig {
+    height: 30%;
+    margin: 1;
+    color: $text;
+    border: solid green;
+
+}
+
+#busconfig > Button {
+    border: solid green;
+}

@@ -1,0 +1,6 @@
+MainScreen {
+    #tabbed_content {
+        width: 1fr;
+        height: 1fr;
+    }
+}

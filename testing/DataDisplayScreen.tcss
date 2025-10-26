@@ -1,0 +1,14 @@
+Screen {
+    align: center top;
+    layout: vertical;
+}
+
+#data_table {
+    border: round rgb(11, 127, 204);
+    margin: 2;
+    height: 80%;
+}
+
+Input {
+    width: 50;
+}
