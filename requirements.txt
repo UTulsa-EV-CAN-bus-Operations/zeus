@@ -1,0 +1,5 @@
+cantools==40.2.1
+python_can==4.5.0
+rich==14.2.0
+textual==6.4.0
+usb_monitor==1.23
